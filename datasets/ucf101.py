@@ -41,7 +41,6 @@ class PECoP_SSL(Dataset):
         sample_rate = random.randint(1, self.max_sr)
         while sample_rate == self.fr:
             sample_rate = random.randint(1, self.max_sr)
-        # print(sample_rate)
 
         segment = random.randint(1, self.max_segment)
         start_frame = random.randint(1, num_frames - self.clip_len)

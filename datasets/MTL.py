@@ -62,6 +62,31 @@ class MTL_Dataset(Dataset):
 
         return start_frame, end_frame, frame_num
 
+    def __getitem__(self, index):
+        sample = self.dataset[index]
+        sample_start_frame, sample_end_frame, sample_frame_num = self.get_start_last_frame(sample)
+
+        sample_rate = random.randint(1, self.max_sr)
+        while sample_rate == self.fr:
+            sample_rate = random.randint(1, self.max_sr)
+
+        segment = random.randint(1, self.max_segment)
+        # 
+        clip_start_frame = random.randint(1, sample_frame_num - self.clip_len)
+
+        segment_start_frame = int((segment - 1) * (self.clip_len / self.max_segment))
+        segment_last_frame = int(segment * (self.clip_len / self.max_segment))
+
+        rgb_clip = self.load_clip()
+
+        label_speed = sample_rate - 1
+        label_segment = segment - 1
+        label = [label_speed, label_segment]
+
+        trans_clip = self.transforms_(rgb_clip)
+
+        return trans_clip, np.array(label)
+
     def load_clip(self, video_dir, start_frame, sample_rate, clip_len,
                   num_frames, segment_start_frame, segment_last_frame):
 
@@ -78,6 +103,7 @@ class MTL_Dataset(Dataset):
                 )
                 normal_f = (start_frame + (idx1 * sample_rate))
                 idx = 1
+
                 img = cv2.imread(cur_img_path)
                 video_clip.append(img)
 
@@ -112,30 +138,6 @@ class MTL_Dataset(Dataset):
         video_clip = np.array(video_clip)
 
         return video_clip
-
-    def __getitem__(self, index):
-        sample = self.dataset[index]
-        sample_start_frame, sample_end_frame, sample_frame_num = self.get_start_last_frame(sample)
-
-        sample_rate = random.randint(1, self.max_sr)
-        while sample_rate == self.fr:
-            sample_rate = random.randint(1, self.max_sr)
-
-        segment = random.randint(1, self.max_segment)
-        clip_start_frame = random.randint(1, sample_frame_num - self.clip_len)
-
-        segment_start_frame = int((segment - 1) * (self.clip_len / self.max_segment))
-        segment_last_frame = int(segment * (self.clip_len / self.max_segment))
-
-        rgb_clip = self.load_clip()
-
-        label_speed = sample_rate - 1
-        label_segment = segment - 1
-        label = [label_speed, label_segment]
-
-        trans_clip = self.transforms_(rgb_clip)
-
-        return trans_clip, np.array(label)
 
     def __len__(self):
         return len(self.dataset)
